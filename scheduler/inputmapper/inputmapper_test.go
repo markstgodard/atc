@@ -7,9 +7,9 @@ import (
 	"github.com/concourse/atc"
 	"github.com/concourse/atc/config"
 	"github.com/concourse/atc/db/algorithm"
+	"github.com/concourse/atc/dbng/dbngfakes"
 	"github.com/concourse/atc/scheduler/inputmapper"
 	"github.com/concourse/atc/scheduler/inputmapper/inputconfig/inputconfigfakes"
-	"github.com/concourse/atc/scheduler/inputmapper/inputmapperfakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,7 +17,7 @@ import (
 
 var _ = Describe("Inputmapper", func() {
 	var (
-		fakeDB          *inputmapperfakes.FakeInputMapperDB
+		fakePipeline    *dbngfakes.FakePipeline
 		fakeTransformer *inputconfigfakes.FakeTransformer
 
 		inputMapper inputmapper.InputMapper
@@ -26,10 +26,10 @@ var _ = Describe("Inputmapper", func() {
 	)
 
 	BeforeEach(func() {
-		fakeDB = new(inputmapperfakes.FakeInputMapperDB)
+		fakePipeline = new(dbngfakes.FakePipeline)
 		fakeTransformer = new(inputconfigfakes.FakeTransformer)
 
-		inputMapper = inputmapper.NewInputMapper(fakeDB, fakeTransformer)
+		inputMapper = inputmapper.NewInputMapper(fakePipeline, fakeTransformer)
 
 		disaster = errors.New("bad thing")
 	})
@@ -133,7 +133,7 @@ var _ = Describe("Inputmapper", func() {
 
 				Context("when saving the independent input mapping fails", func() {
 					BeforeEach(func() {
-						fakeDB.SaveIndependentInputMappingReturns(disaster)
+						fakePipeline.SaveIndependentInputMappingReturns(disaster)
 					})
 
 					It("returns the error", func() {
@@ -141,8 +141,8 @@ var _ = Describe("Inputmapper", func() {
 					})
 
 					It("saved the right input mapping", func() {
-						Expect(fakeDB.SaveIndependentInputMappingCallCount()).To(Equal(1))
-						actualMapping, actualJobName := fakeDB.SaveIndependentInputMappingArgsForCall(0)
+						Expect(fakePipeline.SaveIndependentInputMappingCallCount()).To(Equal(1))
+						actualMapping, actualJobName := fakePipeline.SaveIndependentInputMappingArgsForCall(0)
 						Expect(actualMapping).To(Equal(algorithm.InputMapping{
 							"alias": algorithm.InputVersion{VersionID: 1, FirstOccurrence: true},
 							"b":     algorithm.InputVersion{VersionID: 2, FirstOccurrence: true},
@@ -153,12 +153,12 @@ var _ = Describe("Inputmapper", func() {
 
 				Context("when saving the independent input mapping succeeds", func() {
 					BeforeEach(func() {
-						fakeDB.SaveIndependentInputMappingReturns(nil)
+						fakePipeline.SaveIndependentInputMappingReturns(nil)
 					})
 
 					Context("when saving the next input mapping fails", func() {
 						BeforeEach(func() {
-							fakeDB.SaveNextInputMappingReturns(disaster)
+							fakePipeline.SaveNextInputMappingReturns(disaster)
 						})
 
 						It("returns the error", func() {
@@ -166,8 +166,8 @@ var _ = Describe("Inputmapper", func() {
 						})
 
 						It("saved the right input mapping", func() {
-							Expect(fakeDB.SaveIndependentInputMappingCallCount()).To(Equal(1))
-							actualMapping, actualJobName := fakeDB.SaveIndependentInputMappingArgsForCall(0)
+							Expect(fakePipeline.SaveIndependentInputMappingCallCount()).To(Equal(1))
+							actualMapping, actualJobName := fakePipeline.SaveIndependentInputMappingArgsForCall(0)
 							Expect(actualMapping).To(Equal(algorithm.InputMapping{
 								"alias": algorithm.InputVersion{VersionID: 1, FirstOccurrence: true},
 								"b":     algorithm.InputVersion{VersionID: 2, FirstOccurrence: true},
@@ -178,7 +178,7 @@ var _ = Describe("Inputmapper", func() {
 
 					Context("when saving the next input mapping succeeds", func() {
 						BeforeEach(func() {
-							fakeDB.SaveNextInputMappingReturns(nil)
+							fakePipeline.SaveNextInputMappingReturns(nil)
 						})
 
 						It("returns the mapping", func() {
@@ -190,7 +190,7 @@ var _ = Describe("Inputmapper", func() {
 						})
 
 						It("didn't delete the mapping", func() {
-							Expect(fakeDB.DeleteNextInputMappingCallCount()).To(BeZero())
+							Expect(fakePipeline.DeleteNextInputMappingCallCount()).To(BeZero())
 						})
 					})
 				})
@@ -221,12 +221,12 @@ var _ = Describe("Inputmapper", func() {
 						JobID:      1,
 					},
 				}, nil)
-				fakeDB.SaveIndependentInputMappingReturns(nil)
+				fakePipeline.SaveIndependentInputMappingReturns(nil)
 			})
 
 			Context("when deleting the next input mapping fails", func() {
 				BeforeEach(func() {
-					fakeDB.DeleteNextInputMappingReturns(disaster)
+					fakePipeline.DeleteNextInputMappingReturns(disaster)
 				})
 
 				It("returns the error", func() {
@@ -236,11 +236,11 @@ var _ = Describe("Inputmapper", func() {
 
 			Context("when deleting the next input mapping succeeds", func() {
 				BeforeEach(func() {
-					fakeDB.DeleteNextInputMappingReturns(nil)
+					fakePipeline.DeleteNextInputMappingReturns(nil)
 				})
 
 				It("saved the right individual input mapping", func() {
-					actualMapping, actualJobName := fakeDB.SaveIndependentInputMappingArgsForCall(0)
+					actualMapping, actualJobName := fakePipeline.SaveIndependentInputMappingArgsForCall(0)
 					Expect(actualMapping).To(Equal(algorithm.InputMapping{
 						"a": algorithm.InputVersion{VersionID: 1, FirstOccurrence: true},
 						"b": algorithm.InputVersion{VersionID: 2, FirstOccurrence: true},
@@ -249,9 +249,9 @@ var _ = Describe("Inputmapper", func() {
 				})
 
 				It("deleted the next input mapping", func() {
-					Expect(fakeDB.DeleteNextInputMappingCallCount()).To(Equal(1))
-					Expect(fakeDB.DeleteNextInputMappingArgsForCall(0)).To(Equal("some-job"))
-					Expect(fakeDB.SaveNextInputMappingCallCount()).To(BeZero())
+					Expect(fakePipeline.DeleteNextInputMappingCallCount()).To(Equal(1))
+					Expect(fakePipeline.DeleteNextInputMappingArgsForCall(0)).To(Equal("some-job"))
+					Expect(fakePipeline.SaveNextInputMappingCallCount()).To(BeZero())
 				})
 
 				It("returns an empty mapping and no error", func() {
@@ -285,12 +285,12 @@ var _ = Describe("Inputmapper", func() {
 						JobID:      1,
 					},
 				}, nil)
-				fakeDB.SaveIndependentInputMappingReturns(nil)
-				fakeDB.DeleteNextInputMappingReturns(nil)
+				fakePipeline.SaveIndependentInputMappingReturns(nil)
+				fakePipeline.DeleteNextInputMappingReturns(nil)
 			})
 
 			It("saved the right individual input mapping", func() {
-				actualMapping, actualJobName := fakeDB.SaveIndependentInputMappingArgsForCall(0)
+				actualMapping, actualJobName := fakePipeline.SaveIndependentInputMappingArgsForCall(0)
 				Expect(actualMapping).To(Equal(algorithm.InputMapping{
 					"a": algorithm.InputVersion{VersionID: 1, FirstOccurrence: true},
 				}))
@@ -298,9 +298,9 @@ var _ = Describe("Inputmapper", func() {
 			})
 
 			It("deleted the next input mapping", func() {
-				Expect(fakeDB.DeleteNextInputMappingCallCount()).To(Equal(1))
-				Expect(fakeDB.DeleteNextInputMappingArgsForCall(0)).To(Equal("some-job"))
-				Expect(fakeDB.SaveNextInputMappingCallCount()).To(BeZero())
+				Expect(fakePipeline.DeleteNextInputMappingCallCount()).To(Equal(1))
+				Expect(fakePipeline.DeleteNextInputMappingArgsForCall(0)).To(Equal("some-job"))
+				Expect(fakePipeline.SaveNextInputMappingCallCount()).To(BeZero())
 			})
 
 			It("returns an empty mapping and no error", func() {
@@ -327,12 +327,12 @@ var _ = Describe("Inputmapper", func() {
 						JobID:      1,
 					},
 				}, nil)
-				fakeDB.SaveIndependentInputMappingReturns(nil)
-				fakeDB.DeleteNextInputMappingReturns(nil)
+				fakePipeline.SaveIndependentInputMappingReturns(nil)
+				fakePipeline.DeleteNextInputMappingReturns(nil)
 			})
 
 			It("saved the right individual input mapping", func() {
-				actualMapping, actualJobName := fakeDB.SaveIndependentInputMappingArgsForCall(0)
+				actualMapping, actualJobName := fakePipeline.SaveIndependentInputMappingArgsForCall(0)
 				Expect(actualMapping).To(Equal(algorithm.InputMapping{
 					"b": algorithm.InputVersion{VersionID: 2, FirstOccurrence: true},
 				}))
@@ -340,9 +340,9 @@ var _ = Describe("Inputmapper", func() {
 			})
 
 			It("deleted the next input mapping", func() {
-				Expect(fakeDB.DeleteNextInputMappingCallCount()).To(Equal(1))
-				Expect(fakeDB.DeleteNextInputMappingArgsForCall(0)).To(Equal("some-job"))
-				Expect(fakeDB.SaveNextInputMappingCallCount()).To(BeZero())
+				Expect(fakePipeline.DeleteNextInputMappingCallCount()).To(Equal(1))
+				Expect(fakePipeline.DeleteNextInputMappingArgsForCall(0)).To(Equal("some-job"))
+				Expect(fakePipeline.SaveNextInputMappingCallCount()).To(BeZero())
 			})
 
 			It("returns an empty mapping and no error", func() {
@@ -361,21 +361,21 @@ var _ = Describe("Inputmapper", func() {
 				}
 
 				fakeTransformer.TransformInputConfigsReturns(algorithm.InputConfigs{}, nil)
-				fakeDB.SaveIndependentInputMappingReturns(nil)
-				fakeDB.DeleteNextInputMappingReturns(nil)
+				fakePipeline.SaveIndependentInputMappingReturns(nil)
+				fakePipeline.DeleteNextInputMappingReturns(nil)
 			})
 
 			It("saved the right individual input mapping", func() {
-				actualMapping, actualJobName := fakeDB.SaveIndependentInputMappingArgsForCall(0)
+				actualMapping, actualJobName := fakePipeline.SaveIndependentInputMappingArgsForCall(0)
 				Expect(actualMapping).To(Equal(algorithm.InputMapping{}))
 				Expect(actualJobName).To(Equal("some-job"))
 			})
 
 			It("saved the right next input mapping", func() {
-				actualMapping, actualJobName := fakeDB.SaveNextInputMappingArgsForCall(0)
+				actualMapping, actualJobName := fakePipeline.SaveNextInputMappingArgsForCall(0)
 				Expect(actualMapping).To(Equal(algorithm.InputMapping{}))
 				Expect(actualJobName).To(Equal("some-job"))
-				Expect(fakeDB.DeleteNextInputMappingCallCount()).To(BeZero())
+				Expect(fakePipeline.DeleteNextInputMappingCallCount()).To(BeZero())
 			})
 
 			It("returns an empty mapping and no error", func() {

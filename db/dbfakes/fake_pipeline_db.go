@@ -196,17 +196,6 @@ type FakePipelineDB struct {
 	enableVersionedResourceReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DisableVersionedResourceStub        func(versionedResourceID int) error
-	disableVersionedResourceMutex       sync.RWMutex
-	disableVersionedResourceArgsForCall []struct {
-		versionedResourceID int
-	}
-	disableVersionedResourceReturns struct {
-		result1 error
-	}
-	disableVersionedResourceReturnsOnCall map[int]struct {
-		result1 error
-	}
 	SetResourceCheckErrorStub        func(resource db.SavedResource, err error) error
 	setResourceCheckErrorMutex       sync.RWMutex
 	setResourceCheckErrorArgsForCall []struct {
@@ -365,22 +354,6 @@ type FakePipelineDB struct {
 	getJobFinishedAndNextBuildReturnsOnCall map[int]struct {
 		result1 db.Build
 		result2 db.Build
-		result3 error
-	}
-	GetJobBuildsStub        func(job string, page db.Page) ([]db.Build, db.Pagination, error)
-	getJobBuildsMutex       sync.RWMutex
-	getJobBuildsArgsForCall []struct {
-		job  string
-		page db.Page
-	}
-	getJobBuildsReturns struct {
-		result1 []db.Build
-		result2 db.Pagination
-		result3 error
-	}
-	getJobBuildsReturnsOnCall map[int]struct {
-		result1 []db.Build
-		result2 db.Pagination
 		result3 error
 	}
 	GetAllJobBuildsStub        func(job string) ([]db.Build, error)
@@ -1248,54 +1221,6 @@ func (fake *FakePipelineDB) EnableVersionedResourceReturnsOnCall(i int, result1 
 	}{result1}
 }
 
-func (fake *FakePipelineDB) DisableVersionedResource(versionedResourceID int) error {
-	fake.disableVersionedResourceMutex.Lock()
-	ret, specificReturn := fake.disableVersionedResourceReturnsOnCall[len(fake.disableVersionedResourceArgsForCall)]
-	fake.disableVersionedResourceArgsForCall = append(fake.disableVersionedResourceArgsForCall, struct {
-		versionedResourceID int
-	}{versionedResourceID})
-	fake.recordInvocation("DisableVersionedResource", []interface{}{versionedResourceID})
-	fake.disableVersionedResourceMutex.Unlock()
-	if fake.DisableVersionedResourceStub != nil {
-		return fake.DisableVersionedResourceStub(versionedResourceID)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.disableVersionedResourceReturns.result1
-}
-
-func (fake *FakePipelineDB) DisableVersionedResourceCallCount() int {
-	fake.disableVersionedResourceMutex.RLock()
-	defer fake.disableVersionedResourceMutex.RUnlock()
-	return len(fake.disableVersionedResourceArgsForCall)
-}
-
-func (fake *FakePipelineDB) DisableVersionedResourceArgsForCall(i int) int {
-	fake.disableVersionedResourceMutex.RLock()
-	defer fake.disableVersionedResourceMutex.RUnlock()
-	return fake.disableVersionedResourceArgsForCall[i].versionedResourceID
-}
-
-func (fake *FakePipelineDB) DisableVersionedResourceReturns(result1 error) {
-	fake.DisableVersionedResourceStub = nil
-	fake.disableVersionedResourceReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakePipelineDB) DisableVersionedResourceReturnsOnCall(i int, result1 error) {
-	fake.DisableVersionedResourceStub = nil
-	if fake.disableVersionedResourceReturnsOnCall == nil {
-		fake.disableVersionedResourceReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.disableVersionedResourceReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *FakePipelineDB) SetResourceCheckError(resource db.SavedResource, err error) error {
 	fake.setResourceCheckErrorMutex.Lock()
 	ret, specificReturn := fake.setResourceCheckErrorReturnsOnCall[len(fake.setResourceCheckErrorArgsForCall)]
@@ -1921,61 +1846,6 @@ func (fake *FakePipelineDB) GetJobFinishedAndNextBuildReturnsOnCall(i int, resul
 	}{result1, result2, result3}
 }
 
-func (fake *FakePipelineDB) GetJobBuilds(job string, page db.Page) ([]db.Build, db.Pagination, error) {
-	fake.getJobBuildsMutex.Lock()
-	ret, specificReturn := fake.getJobBuildsReturnsOnCall[len(fake.getJobBuildsArgsForCall)]
-	fake.getJobBuildsArgsForCall = append(fake.getJobBuildsArgsForCall, struct {
-		job  string
-		page db.Page
-	}{job, page})
-	fake.recordInvocation("GetJobBuilds", []interface{}{job, page})
-	fake.getJobBuildsMutex.Unlock()
-	if fake.GetJobBuildsStub != nil {
-		return fake.GetJobBuildsStub(job, page)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2, ret.result3
-	}
-	return fake.getJobBuildsReturns.result1, fake.getJobBuildsReturns.result2, fake.getJobBuildsReturns.result3
-}
-
-func (fake *FakePipelineDB) GetJobBuildsCallCount() int {
-	fake.getJobBuildsMutex.RLock()
-	defer fake.getJobBuildsMutex.RUnlock()
-	return len(fake.getJobBuildsArgsForCall)
-}
-
-func (fake *FakePipelineDB) GetJobBuildsArgsForCall(i int) (string, db.Page) {
-	fake.getJobBuildsMutex.RLock()
-	defer fake.getJobBuildsMutex.RUnlock()
-	return fake.getJobBuildsArgsForCall[i].job, fake.getJobBuildsArgsForCall[i].page
-}
-
-func (fake *FakePipelineDB) GetJobBuildsReturns(result1 []db.Build, result2 db.Pagination, result3 error) {
-	fake.GetJobBuildsStub = nil
-	fake.getJobBuildsReturns = struct {
-		result1 []db.Build
-		result2 db.Pagination
-		result3 error
-	}{result1, result2, result3}
-}
-
-func (fake *FakePipelineDB) GetJobBuildsReturnsOnCall(i int, result1 []db.Build, result2 db.Pagination, result3 error) {
-	fake.GetJobBuildsStub = nil
-	if fake.getJobBuildsReturnsOnCall == nil {
-		fake.getJobBuildsReturnsOnCall = make(map[int]struct {
-			result1 []db.Build
-			result2 db.Pagination
-			result3 error
-		})
-	}
-	fake.getJobBuildsReturnsOnCall[i] = struct {
-		result1 []db.Build
-		result2 db.Pagination
-		result3 error
-	}{result1, result2, result3}
-}
-
 func (fake *FakePipelineDB) GetAllJobBuilds(job string) ([]db.Build, error) {
 	fake.getAllJobBuildsMutex.Lock()
 	ret, specificReturn := fake.getAllJobBuildsReturnsOnCall[len(fake.getAllJobBuildsArgsForCall)]
@@ -2446,8 +2316,6 @@ func (fake *FakePipelineDB) Invocations() map[string][][]interface{} {
 	defer fake.saveResourceTypeVersionMutex.RUnlock()
 	fake.enableVersionedResourceMutex.RLock()
 	defer fake.enableVersionedResourceMutex.RUnlock()
-	fake.disableVersionedResourceMutex.RLock()
-	defer fake.disableVersionedResourceMutex.RUnlock()
 	fake.setResourceCheckErrorMutex.RLock()
 	defer fake.setResourceCheckErrorMutex.RUnlock()
 	fake.getJobMutex.RLock()
@@ -2472,8 +2340,6 @@ func (fake *FakePipelineDB) Invocations() map[string][][]interface{} {
 	defer fake.getNextPendingBuildBySerialGroupMutex.RUnlock()
 	fake.getJobFinishedAndNextBuildMutex.RLock()
 	defer fake.getJobFinishedAndNextBuildMutex.RUnlock()
-	fake.getJobBuildsMutex.RLock()
-	defer fake.getJobBuildsMutex.RUnlock()
 	fake.getAllJobBuildsMutex.RLock()
 	defer fake.getAllJobBuildsMutex.RUnlock()
 	fake.createJobBuildMutex.RLock()

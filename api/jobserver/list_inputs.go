@@ -11,12 +11,12 @@ import (
 	"github.com/concourse/atc/dbng"
 )
 
-func (s *Server) ListJobInputs(pipelineDB db.PipelineDB, dbPipeline dbng.Pipeline) http.Handler {
+func (s *Server) ListJobInputs(_ db.PipelineDB, pipeline dbng.Pipeline) http.Handler {
 	logger := s.logger.Session("list-job-inputs")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		jobName := r.FormValue(":job_name")
 
-		job, found, err := dbPipeline.Job(jobName)
+		job, found, err := pipeline.Job(jobName)
 		if err != nil {
 			logger.Error("failed-to-get-job", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -28,7 +28,7 @@ func (s *Server) ListJobInputs(pipelineDB db.PipelineDB, dbPipeline dbng.Pipelin
 			return
 		}
 
-		scheduler := s.schedulerFactory.BuildScheduler(pipelineDB, dbPipeline, s.externalURL)
+		scheduler := s.schedulerFactory.BuildScheduler(pipeline, s.externalURL)
 
 		err = scheduler.SaveNextInputMapping(logger, job.Config())
 		if err != nil {
@@ -36,7 +36,7 @@ func (s *Server) ListJobInputs(pipelineDB db.PipelineDB, dbPipeline dbng.Pipelin
 			return
 		}
 
-		buildInputs, found, err := pipelineDB.GetNextBuildInputs(jobName)
+		buildInputs, found, err := pipeline.GetNextBuildInputs(jobName)
 		if err != nil {
 			logger.Error("failed-to-get-next-build-inputs", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -48,7 +48,7 @@ func (s *Server) ListJobInputs(pipelineDB db.PipelineDB, dbPipeline dbng.Pipelin
 			return
 		}
 
-		resources, err := dbPipeline.Resources()
+		resources, err := pipeline.Resources()
 		if err != nil {
 			logger.Error("failed-to-get-resources", err)
 			w.WriteHeader(http.StatusInternalServerError)
