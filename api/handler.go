@@ -45,7 +45,6 @@ func NewHandler(
 	providerFactory auth.ProviderFactory,
 	oAuthBaseURL string,
 
-	pipelineDBFactory db.PipelineDBFactory,
 	teamDBFactory db.TeamDBFactory,
 	dbTeamFactory dbng.TeamFactory,
 	dbPipelineFactory dbng.PipelineFactory,

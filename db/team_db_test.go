@@ -3,7 +3,6 @@ package db_test
 import (
 	"time"
 
-	"github.com/concourse/atc"
 	"github.com/concourse/atc/db"
 	"github.com/concourse/atc/db/lock"
 	"github.com/lib/pq"
@@ -63,25 +62,6 @@ var _ = Describe("TeamDB", func() {
 
 		err = listener.Close()
 		Expect(err).NotTo(HaveOccurred())
-	})
-
-	Describe("GetPipelineByName", func() {
-		var savedPipeline db.SavedPipeline
-		BeforeEach(func() {
-			var err error
-			savedPipeline, _, err = teamDB.SaveConfigToBeDeprecated("pipeline-name", atc.Config{}, 0, db.PipelineUnpaused)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, _, err = otherTeamDB.SaveConfigToBeDeprecated("pipeline-name", atc.Config{}, 0, db.PipelineUnpaused)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("returns the pipeline with the case insensitive name that belongs to the team", func() {
-			actualPipeline, found, err := teamDB.GetPipelineByName("pipeline-name")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(found).To(BeTrue())
-			Expect(actualPipeline).To(Equal(savedPipeline))
-		})
 	})
 
 	Describe("GetTeam", func() {
