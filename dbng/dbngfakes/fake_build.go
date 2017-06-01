@@ -7,8 +7,8 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"github.com/concourse/atc"
-	"github.com/concourse/atc/db/lock"
 	"github.com/concourse/atc/dbng"
+	"github.com/concourse/atc/dbng/lock"
 )
 
 type FakeBuild struct {
